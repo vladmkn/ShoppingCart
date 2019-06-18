@@ -26,6 +26,41 @@ namespace ShoppingCart
                 }
             }
 
+        private static async Task<IEnumerable<ShoppingCartItem>>
+            ConvertToShoppingCartItems(HttpResponseMessage response){
+                response.EnsureSuccessStatusCode();
+                var products = 
+                    JsonConvert.DeserializeObject<List<ProductCatalogueProduct>>(
+                        await response.Content.ReadAsStringAsync().ConfigureAwait(false)
+                    );
+
+                return 
+                    products
+                        .Select(productCatalogBaseUrl => new ShoppingCartItem(
+                            int.Parse(p.ProductId),
+                            p.ProductName,
+                            p.ProductDescription,
+                            p.Price
+                        ));
+            }
+
+        private class ProductCatalogueProduct {
+            public string ProductId { get; set; }
+            public string ProductName { get; set; }
+            public string ProductDescription { get; set; }
+            public Money Price { get; set; }
+        }
+
+        private async Task<IEnumerable<ShoppingCartItem>>
+            GetItemsFromCatalogueService(int[] productCatalogueIds)
+            {
+                var response = await
+                    RequestProductFromProductCatalogue(productCatalogueIds)
+                    .ConfigureAwait(false);
+
+                return await ConvertToShoppingCartItems(response)
+                    .ConfigureAwait(false);
+            } 
 
         public ShoppingCartModule(
             IShoppingCartStore shoppingCartStore,
