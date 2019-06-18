@@ -17,7 +17,7 @@ namespace ShoppingCart
                 }
             );
 
-            Get("/{userid:int}/items",
+            Post("/{userid:int}/items",
                 async (parameters, _) =>
                 {
                     var productCatalogIds = this.Bind<int[]>();
@@ -30,6 +30,20 @@ namespace ShoppingCart
                             .ConfigureAwait(false);
 
                     shoppingCart.AddItems(shoppingCartItems, eventStore);
+                    shoppingCartStore.Save(shoppingCart);
+
+                    return shoppingCart;
+                }
+            );
+
+            Delete("/{userid:int}/items",
+                parameters =>
+                {
+                    var productCatalogIds = this.Bind<int[]>();
+                    var userId = (int) parameters.userid;
+
+                    var shoppingCart = shoppingCartStore.Get(userid);
+                    shoppingCart.RemoveItems(productCatalogIds, eventStore); 
                     shoppingCartStore.Save(shoppingCart);
 
                     return shoppingCart;
